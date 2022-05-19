@@ -208,15 +208,21 @@ def main():
     )
     parser.add_argument("language_file", nargs="+", help="Language Files")
     parser.add_argument("-o", "--output", type=str, help="Output")
+    parser.add_argument("-a", "--aligner", type=str, help="Specify Aligner")
     args = vars(parser.parse_args())
 
     language_files = args.get("language_file")
     output_file = args.get("output")
+    aligner = args.get("aligner")
+    if aligner and aligner not in ALIGNERS:
+        parser.error(f"Invalid aligner. Valid options: {ALIGNERS}")
 
     if len(language_files) < 2:
         parser.error("Must provide at least 2 language files.")
 
-    aligner = Aligner()
+    A = Aligner()
+    A.aligner = aligner
+
     language_data = {}
 
     for language_file in language_files:
@@ -238,7 +244,7 @@ def main():
     if not output_file.endswith(".xlsx"):
         output_file = f"{output_file}.xlsx"
 
-    aligned_data = aligner.align(language_data)
+    aligned_data = A.align(language_data)
 
     df = pd.DataFrame(aligned_data)
     df.to_excel(output_file, index=False)
