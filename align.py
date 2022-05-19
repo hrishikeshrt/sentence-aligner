@@ -10,11 +10,16 @@ http://phraseotext.univ-grenoble-alpes.fr/webAlignToolkit/
 
 ###############################################################################
 
+import logging
 from typing import Dict, List
 
 import requests
 import pandas as pd
 from bs4 import BeautifulSoup
+
+###############################################################################
+
+LOGGER = logging.getLogger(__name__)
 
 ###############################################################################
 
@@ -134,8 +139,8 @@ DEFAULT_ALIGNER = "YASA"
 
 
 class Aligner:
-    SERVER = "http://phraseotext.univ-grenoble-alpes.fr/"
-    PATH = "webAlignToolkit/"
+    SERVER = "http://phraseotext.univ-grenoble-alpes.fr"
+    PATH = "webAlignToolkit"
     SITEMAP = {
         "align_text": "alignText.php"
     }
@@ -153,7 +158,7 @@ class Aligner:
             "DNT": "1",
             "Connection": "keep-alive",
             "Origin": self.SERVER,
-            "Referer": f"{self.SERVER}{self.PATH}",
+            "Referer": f"{self.SERVER}/{self.PATH}",
             "Sec-GPC": "1"
         }
 
@@ -179,7 +184,7 @@ class Aligner:
         return self.parse_tmx(tmx_content)
 
     def get_url(self, key: str) -> str:
-        return f"{self.SERVER}{self.PATH}{self.SITEMAP[key]}"
+        return f"{self.SERVER}/{self.PATH}/{self.SITEMAP[key]}"
 
     @staticmethod
     def parse_tmx(tmx_content: str) -> List[Dict[str, str]]:
@@ -206,22 +211,43 @@ def main():
     parser = argparse.ArgumentParser(
         description="Align Sentences using WebAlignToolkit"
     )
-    parser.add_argument("language_file", nargs="+", help="Language Files")
-    parser.add_argument("-o", "--output", type=str, help="Output")
-    parser.add_argument("-a", "--aligner", type=str, help="Specify Aligner")
+    parser.add_argument("language_file", nargs="+", help="language files")
+    parser.add_argument("-o", "--output", type=str, help="path to output")
+    parser.add_argument("-a", "--aligner", type=str, help="specify aligner")
+    parser.add_argument(
+        "--verbose", action="store_true", help="turn on verbose output"
+    )
+    parser.add_argument(
+        "--debug", action="store_true", help="turn on debug mode"
+    )
     args = vars(parser.parse_args())
 
     language_files = args.get("language_file")
     output_file = args.get("output")
     aligner = args.get("aligner")
-    if aligner and aligner not in ALIGNERS:
-        parser.error(f"Invalid aligner. Valid options: {ALIGNERS}")
+
+    # ----------------------------------------------------------------------- #
+
+    root_logger = logging.getLogger()
+    if not root_logger.hasHandlers():
+        root_logger.addHandler(logging.StreamHandler())
+
+    if args.get("verbose"):
+        root_logger.setLevel(logging.INFO)
+    if args.get("debug"):
+        root_logger.setLevel(logging.DEBUG)
+
+    # ----------------------------------------------------------------------- #
 
     if len(language_files) < 2:
         parser.error("Must provide at least 2 language files.")
 
-    A = Aligner()
-    A.aligner = aligner
+    if aligner and aligner not in ALIGNERS:
+        parser.error(f"Invalid aligner. Valid options: {ALIGNERS}")
+
+    # ----------------------------------------------------------------------- #
+
+    A = Aligner(aligner)
 
     language_data = {}
 
@@ -234,7 +260,7 @@ def main():
                 "Language files must start with `lang_id-', e.g. 'sa-1.txt'"
             )
 
-        with open(language_file, encoding="utf-8") as f:
+        with open(language_file) as f:
             lang_data = f.read()
         language_data[lang_id] = lang_data
 
