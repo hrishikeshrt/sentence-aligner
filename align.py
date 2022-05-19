@@ -220,9 +220,8 @@ def main():
     if len(language_files) < 2:
         parser.error("Must provide at least 2 language files.")
 
-    A = Aligner()
-    A.aligner = aligner
-
+    A = Aligner(aligner)
+    
     language_data = {}
 
     for language_file in language_files:
