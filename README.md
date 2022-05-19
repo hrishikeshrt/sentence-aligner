@@ -12,17 +12,23 @@ Align Parallel Corpora using http://phraseotext.univ-grenoble-alpes.fr/webAlignT
 
 ```console
 
-usage: align.py [-h] [-o OUTPUT] language_file [language_file ...]
+usage: align.py [-h] [-o OUTPUT] [-a ALIGNER] [--verbose]
+                [--debug] language_file [language_file ...]
 
 Align Sentences using WebAlignToolkit
 
 positional arguments:
-  language_file         Language Files
+  language_file         language files
 
 optional arguments:
   -h, --help            show this help message and exit
   -o OUTPUT, --output OUTPUT
-                        Output
+                        path to output
+  -a ALIGNER, --aligner ALIGNER
+                        specify aligner
+  --verbose             turn on verbose output
+  --debug               turn on debug mode
+
 ```
 
 **Note**
